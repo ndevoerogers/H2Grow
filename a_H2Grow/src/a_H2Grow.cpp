@@ -7,11 +7,33 @@
 
 
 #include "Particle.h"
+#include <Adafruit_MQTT.h>
+#include "Adafruit_MQTT/Adafruit_MQTT_SPARK.h"
+#include "Adafruit_MQTT/Adafruit_MQTT.h"
 #include "Adafruit_SSD1306.h"
 #include "Adafruit_GFX.h"
-#include "Adafruit_BME280.h"
+ #include "Adafruit_BME280.h"
 #include "IoTClassroom_CNM.h"
 #include "math.h"
+#include "credentials.h"
+
+TCPClient TheClient; //global state
+
+Adafruit_MQTT_SPARK mqtt(&TheClient,AIO_SERVER,AIO_SERVERPORT,AIO_USERNAME,AIO_KEY); 
+
+Adafruit_MQTT_Subscribe subFeed = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/h20Button"); 
+Adafruit_MQTT_Publish pubFeed = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Dust");
+Adafruit_MQTT_Publish pubFeed2 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Humidity");
+Adafruit_MQTT_Publish pubFeed3 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/soilMoisture");
+Adafruit_MQTT_Publish pubFeed4 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Temperature");
+
+float Dust;
+float Humidity;
+float soilMoisture;
+float Temperature;
+bool h20Button;
+void MQTT_connect();
+bool MQTT_ping();
 
 bool status;
 float tempc, tempf;
@@ -31,13 +53,12 @@ float ratio = 0;
 float concentration = 0;
 
 const int PUMP = D19;
-const int dry = 500;//soil
-const int wet = 239; //soil
-int soilVal;//soil
+const int DRY = 2300;//soil
+int soilVal;//soil sensor
 
 
 Adafruit_BME280 bme;
-IoTTimer timer;
+IoTTimer timer, soilTimer, pumpTimer;
 Adafruit_SSD1306 display (OLED);
 
 
@@ -45,6 +66,14 @@ SYSTEM_MODE(SEMI_AUTOMATIC);
 
 
 void setup() {
+
+  WiFi.on();
+  WiFi.connect();
+  while(WiFi.connecting()) {
+  Serial.printf(".");
+  
+  Serial.printf("\n\n");
+  }
   Serial.begin(9600);
   waitFor(Serial.isConnected, 5000);
 
@@ -58,19 +87,21 @@ void setup() {
   display.setTextColor(WHITE);
 
   timer.startTimer(500);
+  soilTimer.startTimer(30000);
 
   pinMode(pin,INPUT); //dust sensor
   starttime = millis(); //dust sensor
 
-  pinMode(soilVal, OUTPUT);
-
+  pinMode(A0, INPUT);
+  pinMode(PUMP, OUTPUT);
+}
 
 
 void loop() {
   display.clearDisplay();
   tempc = bme.readTemperature();
   humidRH = bme.readHumidity();
-
+  soilVal = analogRead(A0);
 
   tempf = (tempc *9/5.0) + 32;
   duration = pulseIn(pin, LOW); //dust
@@ -85,24 +116,32 @@ void loop() {
   if (timer.isTimerReady()) {
     display.clearDisplay();
     display.setCursor (0,0);
-    Serial.printf("Temperature %0.1f\nHumidity %0.1f\nDust Concen %0.1f\n", tempf, humidRH, concentration);
-    display.printf("Temperature %0.1f\nHumidity %0.1f\nDust Concen %0.1f\n", tempf, humidRH, concentration);
+    Serial.printf("Temperature %0.1f\nHumidity %0.1f\nDust Concen %0.1f\nSoil Moisture %i\n", tempf, humidRH, concentration, soilVal);
+    display.printf("Temperature %0.1f\nHumidity %0.1f\nDust Concen %0.1f\nSoil Moisture %i\n", tempf, humidRH, concentration, soilVal);
     display.display ();
     timer.startTimer(1500);
-    }
-
-  analogRead(soilVal);
-  Serial.printf("Soil M %0.1f\n", soilVal);
   }
+  if(soilTimer.isTimerReady()) {
+
+    Serial.printf("Soil Moisture %i\n", soilVal);
+    soilTimer.startTimer(30000);
+
+    if (soilVal >= DRY) {
+      pumpTimer.startTimer(500);
+      digitalWrite(PUMP,HIGH);
+      
+      
+
+    }
+  }  
+  if(pumpTimer.isTimerReady()){
+    digitalWrite(PUMP, LOW);
+  }
+}
 // digitalWrite(PUMP, HIGH);
   
 
 
-
-
-
-
-  }
 
 
 

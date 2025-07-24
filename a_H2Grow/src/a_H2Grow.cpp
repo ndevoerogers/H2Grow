@@ -21,11 +21,11 @@ TCPClient TheClient; //global state
 
 Adafruit_MQTT_SPARK mqtt(&TheClient,AIO_SERVER,AIO_SERVERPORT,AIO_USERNAME,AIO_KEY); 
 
-Adafruit_MQTT_Subscribe subFeed = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/h20Button"); 
-Adafruit_MQTT_Publish pubFeed = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Dust");
-Adafruit_MQTT_Publish pubFeed2 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Humidity");
-Adafruit_MQTT_Publish pubFeed3 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/soilMoisture");
-Adafruit_MQTT_Publish pubFeed4 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Temperature");
+Adafruit_MQTT_Subscribe subFeed = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/h20button"); 
+Adafruit_MQTT_Publish pubFeed = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/dust");
+Adafruit_MQTT_Publish pubFeed2 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/humidity");
+Adafruit_MQTT_Publish pubFeed3 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/soilmoisture");
+Adafruit_MQTT_Publish pubFeed4 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/temperature");
 
 float Dust;
 float Humidity;

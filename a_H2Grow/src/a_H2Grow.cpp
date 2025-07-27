@@ -94,6 +94,9 @@ void setup() {
 
   pinMode(A0, INPUT);
   pinMode(PUMP, OUTPUT);
+
+  mqtt.subscribe(&subFeed);
+  
 }
 
 
